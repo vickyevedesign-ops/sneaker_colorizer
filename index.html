@@ -1,0 +1,429 @@
+# We'll load the provided sneaker outline image from the given path,
+# base64-encode it, and then create a single-file `index.html` that implements
+# interactive hover-and-click coloring using an HTML5 canvas flood-fill approach.
+import base64, textwrap, os, json
+
+img_path = "/mnt/data/Screenshot 2025-08-17 at 19.42.19.png"
+assert os.path.exists(img_path), "Image file not found."
+
+with open(img_path, "rb") as f:
+    b64 = base64.b64encode(f.read()).decode("ascii")
+
+data_url = f"data:image/png;base64,{b64}"
+
+html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Interactive Sneaker Colorizer</title>
+<style>
+  :root {{
+    --ui-gap: 12px;
+  }}
+  * {{ box-sizing: border-box; }}
+  body {{
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    background: #0d0f12;
+    color: #eaeef3;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    min-height: 100vh;
+  }}
+  header {{
+    grid-column: 1 / -1;
+    padding: 14px 18px;
+    background: #11151a;
+    border-bottom: 1px solid #222831;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }}
+  header h1 {{ font-size: 18px; margin: 0; font-weight: 700; letter-spacing: .2px; }}
+  header .actions {{ display: flex; gap: 8px; }}
+  header button {{
+    background: #1f2630;
+    color: #eaeef3;
+    border: 1px solid #2b3340;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+  }}
+  main {{
+    display: grid;
+    place-items: center;
+    padding: 18px;
+  }}
+  #stage-wrap {{
+    position: relative;
+    width: min(100%, 1000px);
+    background: #0f1318;
+    border: 1px solid #222831;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }}
+  canvas {{ width: 100%; height: auto; display: block; border-radius: 12px; }}
+  /* floating helper */
+  #hoverTip {{
+    position: absolute;
+    pointer-events: none;
+    background: rgba(0,0,0,.6);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    opacity: 0;
+    transform: translate(-50%, -120%);
+    transition: opacity .15s ease;
+    white-space: nowrap;
+  }}
+  aside {{
+    border-left: 1px solid #222831;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-gap);
+    background: #0f1318;
+  }}
+  .panel {{
+    background: #0d1117;
+    border: 1px solid #222831;
+    border-radius: 14px;
+    padding: 14px;
+  }}
+  .panel h2 {{ margin: 0 0 10px; font-size: 16px; }}
+  .row {{ display: flex; align-items: center; gap: 10px; margin-top: 8px; }}
+  .row label {{ width: 90px; color: #9fb0c3; font-size: 13px; }}
+  input[type="color"] {{
+    width: 44px; height: 34px; border: none; border-radius: 8px; background: transparent; padding: 0;
+  }}
+  .swatches {{ display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }}
+  .swatches button {{
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid #2b3340; cursor: pointer;
+  }}
+  .hint {{ color: #9fb0c3; font-size: 12px; line-height: 1.4; }}
+  .kbd {{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #11151a; border: 1px solid #2b3340; padding: 1px 6px; border-radius: 6px; }}
+</style>
+</head>
+<body>
+  <header>
+    <h1>Interactive Sneaker Colorizer</h1>
+    <div class="actions">
+      <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
+      <button id="btn-clear">Clear</button>
+      <button id="btn-save">Save PNG</button>
+    </div>
+  </header>
+  <main>
+    <div id="stage-wrap">
+      <canvas id="paint" aria-label="Sneaker coloring canvas"></canvas>
+      <div id="hoverTip">Click to color</div>
+    </div>
+  </main>
+  <aside>
+    <div class="panel">
+      <h2>Color</h2>
+      <div class="row">
+        <label for="picker">Picker</label>
+        <input type="color" id="picker" value="#1e90ff" />
+      </div>
+      <div class="row">
+        <label for="alpha">Opacity</label>
+        <input type="range" id="alpha" min="0" max="100" value="100" />
+      </div>
+      <div class="row">
+        <label for="tolerance">Tolerance</label>
+        <input type="range" id="tolerance" min="0" max="150" value="28" />
+      </div>
+      <div class="row">
+        <label for="hover">Hover</label>
+        <input type="checkbox" id="hover" checked />
+        <span class="hint">Preview region under cursor</span>
+      </div>
+      <div class="row">
+        <label>Swatches</label>
+        <div class="swatches" id="swatches"></div>
+      </div>
+      <p class="hint">Tip: Hold <span class="kbd">Alt</span> to sample a color from the canvas.</p>
+    </div>
+    <div class="panel">
+      <h2>How it works</h2>
+      <p class="hint">Click any white area enclosed by the black outline to fill it. Boundaries are detected from the outline image only, so you can recolor a region any time.</p>
+    </div>
+  </aside>
+
+<script>
+// --- Embedded outline image (base64) ---
+const OUTLINE_SRC = "{data_url}";
+
+// --- Canvas & contexts ---
+const canvas = document.getElementById('paint');
+const ctx = canvas.getContext('2d', {{ willReadFrequently: true }});
+
+// Offscreen: original outline; mask of boundaries; paint layer used for fills
+const off = document.createElement('canvas');
+const offCtx = off.getContext('2d', {{ willReadFrequently: true }});
+const paintLayer = document.createElement('canvas');
+const paintCtx = paintLayer.getContext('2d', {{ willReadFrequently: true }});
+const previewLayer = document.createElement('canvas');
+const previewCtx = previewLayer.getContext('2d', {{ willReadFrequently: true }});
+
+const picker = document.getElementById('picker');
+const alphaInput = document.getElementById('alpha');
+const toleranceInput = document.getElementById('tolerance');
+const hoverToggle = document.getElementById('hover');
+const hoverTip = document.getElementById('hoverTip');
+
+// Undo history
+const history = [];
+function pushHistory() {{
+  history.push(paintCtx.getImageData(0,0,paintLayer.width, paintLayer.height));
+  if (history.length > 30) history.shift();
+}}
+
+// Build some quick swatches
+const SWATCHES = ['#000000','#444444','#888888','#CCCCCC','#FFFFFF',
+  '#E11D48','#F59E0B','#84CC16','#22C55E','#14B8A6','#06B6D4','#3B82F6','#8B5CF6','#EC4899','#A855F7'];
+const swWrap = document.getElementById('swatches');
+SWATCHES.forEach(c=>{{
+  const b = document.createElement('button');
+  b.style.background = c;
+  b.title = c;
+  b.addEventListener('click', () => picker.value = c);
+  swWrap.appendChild(b);
+}});
+
+// Load image & initialize
+const img = new Image();
+img.src = OUTLINE_SRC;
+img.onload = () => {{
+  const ratio = img.naturalWidth / img.naturalHeight;
+  const targetW = Math.min(1200, img.naturalWidth);
+  const targetH = Math.round(targetW / ratio);
+
+  [canvas, off, paintLayer, previewLayer].forEach(el => {{ el.width = targetW; el.height = targetH; }});
+
+  // Draw the outline into offscreen
+  offCtx.clearRect(0,0,targetW,targetH);
+  offCtx.drawImage(img, 0,0, targetW, targetH);
+
+  // Start with blank paint layer
+  paintCtx.clearRect(0,0,targetW,targetH);
+  previewCtx.clearRect(0,0,targetW,targetH);
+
+  // Compose initial scene
+  render();
+}};
+
+// Compose paint + outline
+function render() {{
+  // 1) Clear visible canvas
+  ctx.clearRect(0,0,canvas.width, canvas.height);
+  // 2) Draw paint and preview
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(paintLayer, 0,0);
+  ctx.drawImage(previewLayer, 0,0);
+  // 3) Multiply the outline on top so its white stays transparent, and black lines darken
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.drawImage(off, 0,0);
+  ctx.globalCompositeOperation = 'source-over';
+}}
+
+// Flood fill using boundary mask derived from outline (stop at dark pixels)
+function floodFillRegion(x, y, tolerance=28) {{
+  const w = off.width, h = off.height;
+  const outline = offCtx.getImageData(0,0,w,h).data;
+
+  const idx = (x,y)=> (y*w + x)*4;
+  // A pixel is a boundary if its brightness is below (255 - tolerance)
+  const isBoundary = (i) => {{
+    const r = outline[i], g = outline[i+1], b = outline[i+2], a = outline[i+3];
+    if (a < 10) return false; // transparent, treat as empty
+    const brightness = (r+g+b)/3;
+    return brightness < (255 - tolerance); // dark -> boundary
+  }};
+
+  // Early escape: click on boundary shouldn't fill
+  if (isBoundary(idx(x,y))) return null;
+
+  const visited = new Uint8Array(w*h);
+  const stack = [x,y];
+  const region = new Uint32Array(w*h); // mask: 1 where region
+  let minX = x, maxX = x, minY = y, maxY = y;
+
+  while (stack.length) {{
+    const cy = stack.pop();
+    const cx = stack.pop();
+    const i = idx(cx, cy);
+    if (visited[i>>2]) continue;
+    visited[i>>2] = 1;
+
+    if (isBoundary(i)) continue;
+    region[i>>2] = 1;
+    if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
+    if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
+
+    if (cx>0) stack.push(cx-1, cy);
+    if (cx<w-1) stack.push(cx+1, cy);
+    if (cy>0) stack.push(cx, cy-1);
+    if (cy<h-1) stack.push(cx, cy+1);
+  }}
+
+  return {{ mask: region, bounds: {{minX, maxX, minY, maxY}} }};
+}}
+
+// Paint a region from a mask
+function paintMask(mask, bounds, color, opacity=1) {{
+  const w = paintLayer.width, h = paintLayer.height;
+  const imgData = paintCtx.getImageData(bounds.minX, bounds.minY, bounds.maxX-bounds.minX+1, bounds.maxY-bounds.minY+1);
+  const data = imgData.data;
+
+  // Parse hex color
+  const hex = color.replace('#','');
+  const r = parseInt(hex.substring(0,2),16);
+  const g = parseInt(hex.substring(2,4),16);
+  const b = parseInt(hex.substring(4,6),16);
+  const a = Math.round(255 * opacity);
+
+  let p = 0;
+  for (let y = bounds.minY; y <= bounds.maxY; y++) {{
+    for (let x = bounds.minX; x <= bounds.maxX; x++) {{
+      const i = (y*w + x);
+      if (mask[i]) {{
+        const j = p*4;
+        data[j] = r; data[j+1] = g; data[j+2] = b; data[j+3] = a;
+      }}
+      p++;
+    }}
+  }}
+  paintCtx.putImageData(imgData, bounds.minX, bounds.minY);
+}}
+
+// Preview region (semi-transparent overlay)
+function previewMask(mask, bounds, color) {{
+  previewCtx.clearRect(0,0,previewLayer.width, previewLayer.height);
+  const w = previewLayer.width;
+  const imgData = previewCtx.getImageData(bounds.minX, bounds.minY, bounds.maxX-bounds.minX+1, bounds.maxY-bounds.minY+1);
+  const data = imgData.data;
+
+  const hex = color.replace('#','');
+  const r = parseInt(hex.substring(0,2),16);
+  const g = parseInt(hex.substring(2,4),16);
+  const b = parseInt(hex.substring(4,6),16);
+  const a = 90; // fixed preview alpha
+
+  let p = 0;
+  for (let y = bounds.minY; y <= bounds.maxY; y++) {{
+    for (let x = bounds.minX; x <= bounds.maxX; x++) {{
+      const i = (y*w + x);
+      if (mask[i]) {{
+        const j = p*4;
+        data[j] = r; data[j+1] = g; data[j+2] = b; data[j+3] = a;
+      }}
+      p++;
+    }}
+  }}
+  previewCtx.putImageData(imgData, bounds.minX, bounds.minY);
+}}
+
+// Map mouse to canvas pixel
+function getCanvasXY(evt) {{
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const x = Math.floor((evt.clientX - rect.left) * scaleX);
+  const y = Math.floor((evt.clientY - rect.top) * scaleY);
+  return {{x,y}};
+}}
+
+let lastPreview = null;
+
+canvas.addEventListener('mousemove', (e) => {{
+  if (!hoverToggle.checked) return;
+  const {{x,y}} = getCanvasXY(e);
+  const tol = parseInt(toleranceInput.value, 10);
+  const region = floodFillRegion(x,y,tol);
+  if (!region) {{ previewCtx.clearRect(0,0,previewLayer.width, previewLayer.height); render(); hoverTip.style.opacity = 0; return; }}
+  lastPreview = region;
+  previewMask(region.mask, region.bounds, picker.value);
+  render();
+  hoverTip.style.left = e.offsetX + 'px';
+  hoverTip.style.top = e.offsetY + 'px';
+  hoverTip.style.opacity = 1;
+}});
+
+canvas.addEventListener('mouseleave', () => {{
+  previewCtx.clearRect(0,0,previewLayer.width, previewLayer.height);
+  render();
+  hoverTip.style.opacity = 0;
+}});
+
+canvas.addEventListener('click', (e) => {{
+  const {{x,y}} = getCanvasXY(e);
+  // Alt-click = eyedropper from visible composite
+  if (e.altKey) {{
+    const px = ctx.getImageData(x,y,1,1).data;
+    const toHex = (n)=> ('0' + n.toString(16)).slice(-2);
+    picker.value = '#' + toHex(px[0]) + toHex(px[1]) + toHex(px[2]);
+    return;
+  }}
+  const tol = parseInt(toleranceInput.value, 10);
+  const region = floodFillRegion(x,y,tol);
+  if (!region) return;
+  pushHistory();
+  const opacity = parseInt(alphaInput.value, 10) / 100;
+  paintMask(region.mask, region.bounds, picker.value, opacity);
+  previewCtx.clearRect(0,0,previewLayer.width, previewLayer.height);
+  render();
+}});
+
+// Controls
+document.getElementById('btn-undo').addEventListener('click', () => {{
+  const state = history.pop();
+  if (!state) return;
+  paintCtx.putImageData(state, 0, 0);
+  render();
+}});
+
+document.getElementById('btn-clear').addEventListener('click', () => {{
+  pushHistory();
+  paintCtx.clearRect(0,0,paintLayer.width, paintLayer.height);
+  render();
+}});
+
+document.getElementById('btn-save').addEventListener('click', () => {{
+  // Export composite as PNG
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = canvas.width;
+  exportCanvas.height = canvas.height;
+  const ex = exportCanvas.getContext('2d');
+  ex.drawImage(paintLayer,0,0);
+  ex.globalCompositeOperation = 'multiply';
+  ex.drawImage(off,0,0);
+  ex.globalCompositeOperation = 'source-over';
+  const url = exportCanvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sneaker-colored.png';
+  a.click();
+}});
+
+// Keyboard shortcut: Ctrl+Z
+window.addEventListener('keydown', (e)=>{{
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {{
+    e.preventDefault();
+    document.getElementById('btn-undo').click();
+  }}
+}});
+</script>
+</body>
+</html>
+"""
+
+out_path = "/mnt/data/index.html"
+with open(out_path, "w", encoding="utf-8") as f:
+    f.write(html)
+
+out_path
