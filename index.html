@@ -23,6 +23,7 @@
 
     main {
       display: flex;
+      flex-wrap: nowrap;
       gap: 24px;
       justify-content: center;
       align-items: flex-start;
@@ -31,13 +32,11 @@
       box-sizing: border-box;
     }
 
-    /* --- Larger stage (no shadow) --- */
     #stage-wrap {
       background: #fff;
       border-radius: 16px;
-      box-shadow: none;
-      flex: 1 1 720px; /* allow more width */
-      max-width: 1100px;
+      flex: 1 1 700px;
+      max-width: 1000px;
       aspect-ratio: 16/9;
       display: flex;
       align-items: center;
@@ -46,47 +45,41 @@
     }
     #stage-wrap object { width: 98%; height: 98%; }
 
-    /* --- Slim controls on right --- */
     aside {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      min-width: 200px; /* slimmer */
-      max-width: 240px;
-      padding: 8px 12px;
+      align-items: center;
+      justify-content: center;
+      min-width: 180px;
+      max-width: 200px;
+      padding: 16px;
       border-radius: 12px;
-      background: #F8F8FD; /* same as page background, looks flush */
+      background: #fff;
     }
 
-    #picker { 
-      background: #F8F8FD; 
-      border: none; 
-      width: 100%;
+    hex-color-picker {
+      width: 160px;
+      height: 160px;
     }
 
-    /* --- Toolbar --- */
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      margin-top: 20px;
+      width: 100%;
     }
     .controls button {
-      width: 100%;
-      padding: 10px 12px;
+      padding: 10px 14px;
       border: none;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
       font-size: 14px;
-      transition: transform 0.1s ease, opacity 0.2s ease;
     }
-    .controls button:hover {
-      transform: translateY(-2px);
-      opacity: 0.9;
-    }
-
     .undo-btn { background: #0103A5; color: #fff; }
     .save-btn { background: #FFCDE6; color: #0103A5; }
+    .eyedrop-btn { background: #E1E4FF; color: #0103A5; }
 
     footer { text-align: center; font-size: 14px; margin: 16px 0 24px; }
   </style>
@@ -105,10 +98,12 @@
     <div id="stage-wrap">
       <object id="sneaker-svg" type="image/svg+xml" data="sneaker1.svg"></object>
     </div>
-
     <aside>
-      <div id="picker"></div>
+      <!-- Vanilla-colorful picker -->
+      <hex-color-picker color="#4F46E5"></hex-color-picker>
+
       <div class="controls">
+        <button class="eyedrop-btn" onclick="useEyedropper()">EYEDROPPER</button>
         <button class="undo-btn" onclick="resetColors()">UNDO</button>
         <button class="save-btn" onclick="savePNG()">SAVE</button>
       </div>
@@ -116,11 +111,11 @@
   </main>
 
   <footer>
-    Pick a colour and hover over the illustration to fill in sections.
+    Pick a colour or use the eyedropper, then hover over the illustration to fill in sections.
   </footer>
 
-  <!-- Load iro.js after DOM exists -->
-  <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+  <!-- Vanilla-colorful -->
+  <script type="module" src="https://cdn.skypack.dev/vanilla-colorful"></script>
   <!-- saveSvgAsPng -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/save-svg-as-png/1.4.17/saveSvgAsPng.min.js"></script>
 
@@ -128,23 +123,27 @@
     let currentColor = "#4F46E5"; // default
     const svgObject = document.getElementById("sneaker-svg");
 
-    // init iro.js AFTER window load
-    window.addEventListener("DOMContentLoaded", () => {
-      const iroPicker = new iro.ColorPicker("#picker", {
-        width: 180, // slimmer picker
-        color: currentColor,
-        layout: [
-          { component: iro.ui.Box },
-          { component: iro.ui.Slider, options: { sliderType: 'hue' }},
-          { component: iro.ui.Slider, options: { sliderType: 'alpha' }}
-        ]
-      });
-
-      // update color
-      iroPicker.on("color:change", (color) => {
-        currentColor = color.hexString;
-      });
+    // vanilla-colorful picker
+    const picker = document.querySelector("hex-color-picker");
+    picker.addEventListener("color-changed", (e) => {
+      currentColor = e.detail.value;
     });
+
+    // eyedropper API
+    async function useEyedropper() {
+      if (!window.Eyedropper) {
+        alert("Eyedropper API not supported in this browser.");
+        return;
+      }
+      try {
+        const eye = new EyeDropper();
+        const result = await eye.open();
+        currentColor = result.sRGBHex;
+        picker.color = currentColor; // update picker display
+      } catch (err) {
+        console.log("Eyedropper cancelled", err);
+      }
+    }
 
     // when sneaker svg loads
     svgObject.addEventListener("load", () => {
