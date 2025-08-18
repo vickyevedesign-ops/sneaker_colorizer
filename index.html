@@ -6,11 +6,16 @@
   <title>VickyEve ColourIn's</title>
 
   <style>
+    :root {
+      --bg: #F8F8FD;
+      --ink: #0103A5;
+    }
+
     body {
       margin: 0;
-      font-family: sans-serif;
-      background: #F8F8FD;
-      color: #0103A5;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -23,20 +28,21 @@
 
     main {
       display: flex;
-      flex-wrap: nowrap;
       gap: 24px;
       justify-content: center;
-      align-items: flex-start;
+      align-items: stretch;
       width: 100%;
       padding: 24px;
       box-sizing: border-box;
     }
 
+    /* Big canvas, no shadow */
     #stage-wrap {
       background: #fff;
       border-radius: 16px;
-      flex: 1 1 700px;
-      max-width: 1000px;
+      box-shadow: none;
+      flex: 1 1 820px;            /* give the stage more space */
+      max-width: 1200px;
       aspect-ratio: 16/9;
       display: flex;
       align-items: center;
@@ -45,41 +51,77 @@
     }
     #stage-wrap object { width: 98%; height: 98%; }
 
+    /* Slim right sidebar; vertically center contents */
     aside {
+      min-width: 180px;
+      max-width: 200px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      min-width: 180px;
-      max-width: 200px;
-      padding: 16px;
-      border-radius: 12px;
-      background: #fff;
+      justify-content: center;    /* vertical centering */
+      gap: 14px;
+      background: var(--bg);      /* flush with page background */
+      padding: 8px 0;
     }
 
+    /* Picker size */
     hex-color-picker {
-      width: 160px;
-      height: 160px;
+      width: 170px;
+      height: 170px;
     }
 
-    .controls {
+    /* Hex input + eyedropper row */
+    .tools {
       display: flex;
       flex-direction: column;
+      align-items: stretch;
       gap: 10px;
-      margin-top: 20px;
       width: 100%;
+      max-width: 200px;
     }
-    .controls button {
-      padding: 10px 14px;
-      border: none;
+
+    .hex-field {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hex-field label {
+      font-size: 12px;
+      opacity: 0.8;
+      letter-spacing: .02em;
+    }
+
+    #hex-input {
+      width: 110px;
+      text-transform: uppercase;
+      text-align: center;
+      border: 1px solid #ccc;
       border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
+      padding: 6px 8px;
       font-size: 14px;
+      background: #fff;
+      color: #111;
+      outline: none;
     }
-    .undo-btn { background: #0103A5; color: #fff; }
-    .save-btn { background: #FFCDE6; color: #0103A5; }
-    .eyedrop-btn { background: #E1E4FF; color: #0103A5; }
+
+    #hex-input.invalid {
+      border-color: #E54;
+    }
+
+    .eyedrop-btn {
+      padding: 10px 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      background: #E1E4FF;
+      color: var(--ink);
+      transition: transform .1s ease, opacity .2s ease;
+    }
+    .eyedrop-btn:hover { transform: translateY(-2px); opacity: .9; }
 
     footer { text-align: center; font-size: 14px; margin: 16px 0 24px; }
   </style>
@@ -98,65 +140,99 @@
     <div id="stage-wrap">
       <object id="sneaker-svg" type="image/svg+xml" data="sneaker1.svg"></object>
     </div>
+
+    <!-- Slim right panel -->
     <aside>
-      <!-- Vanilla-colorful picker -->
       <hex-color-picker color="#4F46E5"></hex-color-picker>
 
-      <div class="controls">
-        <button class="eyedrop-btn" onclick="useEyedropper()">EYEDROPPER</button>
-        <button class="undo-btn" onclick="resetColors()">UNDO</button>
-        <button class="save-btn" onclick="savePNG()">SAVE</button>
+      <div class="tools">
+        <div class="hex-field">
+          <label for="hex-input">HEX</label>
+          <input id="hex-input" type="text" value="#4F46E5" spellcheck="false" autocomplete="off" inputmode="text" />
+        </div>
+
+        <button class="eyedrop-btn" id="eyedropper-btn">EYEDROPPER</button>
       </div>
     </aside>
   </main>
 
   <footer>
-    Pick a colour or use the eyedropper, then hover over the illustration to fill in sections.
+    Pick a colour or use the eyedropper, then hover/click the illustration to fill sections.
   </footer>
 
-  <!-- Vanilla-colorful -->
+  <!-- vanilla-colorful web component -->
   <script type="module" src="https://cdn.skypack.dev/vanilla-colorful"></script>
-  <!-- saveSvgAsPng -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/save-svg-as-png/1.4.17/saveSvgAsPng.min.js"></script>
 
   <script>
-    let currentColor = "#4F46E5"; // default
+    let currentColor = "#4F46E5";
     const svgObject = document.getElementById("sneaker-svg");
-
-    // vanilla-colorful picker
     const picker = document.querySelector("hex-color-picker");
+    const hexInput = document.getElementById("hex-input");
+    const eyeBtn = document.getElementById("eyedropper-btn");
+
+    // --- Helpers ---
+    function normalizeHex(v) {
+      if (!v) return null;
+      v = v.trim().replace(/^#/,'');          // drop leading #
+      if (/^[0-9a-fA-F]{3}$/.test(v)) {
+        // expand short form #RGB -> #RRGGBB
+        v = v.split('').map(ch => ch + ch).join('');
+      }
+      if (!/^[0-9a-fA-F]{6}$/.test(v)) return null;
+      return '#' + v.toUpperCase();
+    }
+
+    function setColor(hex) {
+      currentColor = hex;
+      picker.color = hex;                      // reflect in picker
+      hexInput.value = hex.toUpperCase();     // reflect in input
+      hexInput.classList.remove('invalid');
+    }
+
+    // --- vanilla-colorful -> app ---
     picker.addEventListener("color-changed", (e) => {
-      currentColor = e.detail.value;
+      setColor(e.detail.value);
     });
 
-    // eyedropper API
-    async function useEyedropper() {
-      if (!window.Eyedropper) {
-        alert("Eyedropper API not supported in this browser.");
+    // --- HEX input -> app ---
+    hexInput.addEventListener("input", () => {
+      const norm = normalizeHex(hexInput.value);
+      if (norm) setColor(norm);
+      else hexInput.classList.add('invalid');
+    });
+    hexInput.addEventListener("blur", () => {
+      const norm = normalizeHex(hexInput.value) || currentColor;
+      setColor(norm);
+    });
+
+    // --- Eyedropper (use the previous working API) ---
+    eyeBtn.addEventListener("click", async () => {
+      if (!("EyeDropper" in window)) {
+        alert("Eyedropper not supported in this browser.");
         return;
       }
       try {
         const eye = new EyeDropper();
         const result = await eye.open();
-        currentColor = result.sRGBHex;
-        picker.color = currentColor; // update picker display
+        setColor(result.sRGBHex);
       } catch (err) {
-        console.log("Eyedropper cancelled", err);
+        // user cancelled; no-op
       }
-    }
+    });
 
-    // when sneaker svg loads
+    // --- SVG load + painting logic ---
     svgObject.addEventListener("load", () => {
       const svgDoc = svgObject.contentDocument;
+      if (!svgDoc) return;
       const fillables = svgDoc.querySelectorAll(".fillable");
 
       fillables.forEach(el => {
-        el.setAttribute("fill", "#ffffff"); // start white
-        el.dataset.oldFill = "#ffffff";
+        el.setAttribute("fill", "#FFFFFF");
+        el.dataset.oldFill = "#FFFFFF";
         el.style.cursor = "pointer";
 
         el.addEventListener("mouseenter", () => {
-          el.dataset.oldFill = el.getAttribute("fill") || "#ffffff";
+          el.dataset.oldFill = el.getAttribute("fill") || "#FFFFFF";
           el.setAttribute("fill", "rgba(200,200,200,0.6)");
         });
 
@@ -170,23 +246,6 @@
         });
       });
     });
-
-    // reset
-    function resetColors() {
-      const svgDoc = svgObject.contentDocument;
-      if (!svgDoc) return;
-      svgDoc.querySelectorAll(".fillable").forEach(el => {
-        el.setAttribute("fill", "#ffffff");
-        el.dataset.oldFill = "#ffffff";
-      });
-    }
-
-    // save
-    function savePNG() {
-      const svg = svgObject.contentDocument.querySelector("svg");
-      if (!svg) return;
-      saveSvgAsPng(svg, "sneaker.png");
-    }
   </script>
 </body>
 </html>
