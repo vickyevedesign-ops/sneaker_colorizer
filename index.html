@@ -39,4 +39,155 @@
       flex: 1 1 720px; /* allow more width */
       max-width: 1100px;
       aspect-ratio: 16/9;
-      d
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+    #stage-wrap object { width: 98%; height: 98%; }
+
+    /* --- Slim controls on right --- */
+    aside {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 200px; /* slimmer */
+      max-width: 240px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: #F8F8FD; /* same as page background, looks flush */
+    }
+
+    #picker { 
+      background: #F8F8FD; 
+      border: none; 
+      width: 100%;
+    }
+
+    /* --- Toolbar --- */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .controls button {
+      width: 100%;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.1s ease, opacity 0.2s ease;
+    }
+    .controls button:hover {
+      transform: translateY(-2px);
+      opacity: 0.9;
+    }
+
+    .undo-btn { background: #0103A5; color: #fff; }
+    .save-btn { background: #FFCDE6; color: #0103A5; }
+
+    footer { text-align: center; font-size: 14px; margin: 16px 0 24px; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="logo.png" alt="VickyEve Logo"/>
+    <p>
+      Hi, I’m Vicky, a London based Visual Designer with a UX/UI flair. 
+      With more than 14 years of experience, I help brands stand out through 
+      bold, engaging, and purposeful design.
+    </p>
+  </header>
+
+  <main>
+    <div id="stage-wrap">
+      <object id="sneaker-svg" type="image/svg+xml" data="sneaker1.svg"></object>
+    </div>
+
+    <aside>
+      <div id="picker"></div>
+      <div class="controls">
+        <button class="undo-btn" onclick="resetColors()">UNDO</button>
+        <button class="save-btn" onclick="savePNG()">SAVE</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    Pick a colour and hover over the illustration to fill in sections.
+  </footer>
+
+  <!-- Load iro.js after DOM exists -->
+  <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+  <!-- saveSvgAsPng -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/save-svg-as-png/1.4.17/saveSvgAsPng.min.js"></script>
+
+  <script>
+    let currentColor = "#4F46E5"; // default
+    const svgObject = document.getElementById("sneaker-svg");
+
+    // init iro.js AFTER window load
+    window.addEventListener("DOMContentLoaded", () => {
+      const iroPicker = new iro.ColorPicker("#picker", {
+        width: 180, // slimmer picker
+        color: currentColor,
+        layout: [
+          { component: iro.ui.Box },
+          { component: iro.ui.Slider, options: { sliderType: 'hue' }},
+          { component: iro.ui.Slider, options: { sliderType: 'alpha' }}
+        ]
+      });
+
+      // update color
+      iroPicker.on("color:change", (color) => {
+        currentColor = color.hexString;
+      });
+    });
+
+    // when sneaker svg loads
+    svgObject.addEventListener("load", () => {
+      const svgDoc = svgObject.contentDocument;
+      const fillables = svgDoc.querySelectorAll(".fillable");
+
+      fillables.forEach(el => {
+        el.setAttribute("fill", "#ffffff"); // start white
+        el.dataset.oldFill = "#ffffff";
+        el.style.cursor = "pointer";
+
+        el.addEventListener("mouseenter", () => {
+          el.dataset.oldFill = el.getAttribute("fill") || "#ffffff";
+          el.setAttribute("fill", "rgba(200,200,200,0.6)");
+        });
+
+        el.addEventListener("mouseleave", () => {
+          el.setAttribute("fill", el.dataset.oldFill);
+        });
+
+        el.addEventListener("click", () => {
+          el.setAttribute("fill", currentColor);
+          el.dataset.oldFill = currentColor;
+        });
+      });
+    });
+
+    // reset
+    function resetColors() {
+      const svgDoc = svgObject.contentDocument;
+      if (!svgDoc) return;
+      svgDoc.querySelectorAll(".fillable").forEach(el => {
+        el.setAttribute("fill", "#ffffff");
+        el.dataset.oldFill = "#ffffff";
+      });
+    }
+
+    // save
+    function savePNG() {
+      const svg = svgObject.contentDocument.querySelector("svg");
+      if (!svg) return;
+      saveSvgAsPng(svg, "sneaker.png");
+    }
+  </script>
+</body>
+</html>
