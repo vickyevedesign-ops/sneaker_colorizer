@@ -27,14 +27,14 @@
     main {
       flex: 1;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 16px;
-      gap: 24px;
+      padding: 24px;
+      gap: 32px;
     }
     #stage-wrap {
       position: relative;
-      width: min(100%, 800px);
+      width: min(100%, 900px);
       aspect-ratio: 16 / 9;
       background:#fff; /* White background */
       border:1px solid #222831;
@@ -47,17 +47,18 @@
       justify-content: center;
     }
     #stage-wrap object {
-      width: 90%;
-      height: 90%;
+      width: 95%;
+      height: 95%;
     }
     aside {
       display:flex;
       flex-direction:column;
-      gap:16px;
-      padding:16px;
+      gap:20px;
+      padding:20px;
       background:#0f1318;
       border-radius:12px;
       box-shadow:0 6px 20px rgba(0,0,0,.3);
+      min-width: 300px;
     }
     .controls button {
       padding: 10px 16px;
@@ -96,24 +97,24 @@
 
   <script>
     const svgObject = document.getElementById("sneaker-svg");
-    let currentColor = "#ff0000";
+    let currentColor = "#4F46E5"; // default purple
 
     // Initialize Pickr
     const pickr = Pickr.create({
       el: '#color-picker',
-      theme: 'classic', // same as screenshot
-      default: '#ff0000',
+      theme: 'classic', // nice big UI
+      default: '#4F46E5',
       swatches: [
         '#F44336', '#E91E63', '#9C27B0', '#673AB7',
         '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4',
         '#009688', '#4CAF50', '#8BC34A', '#CDDC39',
-        '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'
+        '#FFEB3B', '#FFC107', '#FF9800', '#FF5722',
+        '#795548', '#9E9E9E', '#607D8B'
       ],
       components: {
         preview: true,
         opacity: true,
         hue: true,
-
         interaction: {
           hex: true,
           rgba: true,
@@ -132,13 +133,14 @@
     svgObject.addEventListener("load", () => {
       const svgDoc = svgObject.contentDocument;
       const fillables = svgDoc.querySelectorAll(".fillable");
+      console.log("Found", fillables.length, "fillable paths");
 
       fillables.forEach(el => {
         el.style.cursor = "pointer";
 
         el.addEventListener("mouseenter", () => {
           el.dataset.oldFill = el.getAttribute("fill") || "transparent";
-          el.setAttribute("fill", "rgba(255,255,0,0.3)");
+          el.setAttribute("fill", "rgba(200,200,200,0.6)"); // light grey hover
         });
 
         el.addEventListener("mouseleave", () => {
@@ -147,6 +149,7 @@
 
         el.addEventListener("click", () => {
           el.setAttribute("fill", currentColor);
+          el.dataset.oldFill = currentColor; // remember chosen color
         });
       });
     });
@@ -157,6 +160,7 @@
       if (!svgDoc) return;
       svgDoc.querySelectorAll(".fillable").forEach(el => {
         el.removeAttribute("fill");
+        el.dataset.oldFill = "transparent";
       });
     }
 
