@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>VickyEve ColourIn's</title>
+
   <style>
     body {
       margin: 0;
@@ -15,10 +16,22 @@
       align-items: center;
       min-height: 100vh;
     }
+
     header { text-align: center; margin: 24px 16px; }
     header img { width: 80px; margin-bottom: 16px; }
     header p { max-width: 700px; margin: 0 auto; font-size: 18px; line-height: 1.4; }
-    main { display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; align-items: flex-start; width: 100%; padding: 24px; box-sizing: border-box; }
+
+    main {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
     #stage-wrap {
       background: #fff;
       border-radius: 16px;
@@ -29,9 +42,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 8px; /* smaller padding so sneaker appears bigger */
+      padding: 8px; /* small padding so sneaker is larger */
     }
     #stage-wrap object { width: 98%; height: 98%; }
+
     aside {
       display: flex;
       flex-direction: column;
@@ -43,7 +57,14 @@
       background: #fff;
       box-shadow: 0 6px 20px rgba(0,0,0,.1);
     }
-    .controls { display: flex; gap: 12px; margin-top: 12px; }
+
+    #picker { width: 100%; height: auto; }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
     .controls button {
       flex: 1;
       padding: 12px 16px;
@@ -55,8 +76,8 @@
     }
     .undo-btn { background: #0103A5; color: #fff; }
     .save-btn { background: #FFCDE6; color: #0103A5; }
+
     footer { text-align: center; font-size: 14px; margin: 16px 0 24px; }
-    #picker { width: 100%; height: auto; }
   </style>
 </head>
 <body>
@@ -68,18 +89,22 @@
       bold, engaging, and purposeful design.
     </p>
   </header>
+
   <main>
     <div id="stage-wrap">
       <object id="sneaker-svg" type="image/svg+xml" data="sneaker1.svg"></object>
     </div>
     <aside>
+      <!-- Color Picker container -->
       <div id="picker"></div>
+
       <div class="controls">
         <button class="undo-btn" onclick="resetColors()">UNDO</button>
         <button class="save-btn" onclick="savePNG()">SAVE</button>
       </div>
     </aside>
   </main>
+
   <footer>
     Pick a colour and hover over the illustration to fill in sections.
   </footer>
@@ -93,7 +118,7 @@
     const svgObject = document.getElementById("sneaker-svg");
     let currentColor = "#4F46E5"; // default
 
-    // init iro.js color picker
+    // Initialize iro.js picker
     const iroPicker = new iro.ColorPicker("#picker", {
       width: 240,
       color: currentColor,
@@ -101,19 +126,19 @@
       borderColor: "#ccc",
     });
 
-    // update currentColor when picker changes
-    iroPicker.on('color:change', (color) => {
+    // Update currentColor when picker changes
+    iroPicker.on("color:change", (color) => {
       currentColor = color.hexString;
     });
 
-    // once SVG loads
+    // When SVG loads
     svgObject.addEventListener("load", () => {
       const svgDoc = svgObject.contentDocument;
       const fillables = svgDoc.querySelectorAll(".fillable");
       console.log("Found", fillables.length, "fillable sections");
 
       fillables.forEach(el => {
-        el.setAttribute("fill", "#ffffff");
+        el.setAttribute("fill", "#ffffff"); // start white
         el.dataset.oldFill = "#ffffff";
         el.style.cursor = "pointer";
 
@@ -128,20 +153,22 @@
 
         el.addEventListener("click", () => {
           el.setAttribute("fill", currentColor);
-          el.dataset.oldFill = currentColor; // make it stick
+          el.dataset.oldFill = currentColor;
         });
       });
     });
 
+    // Reset colors
     function resetColors() {
       const svgDoc = svgObject.contentDocument;
       if (!svgDoc) return;
       svgDoc.querySelectorAll(".fillable").forEach(el => {
-        el.setAttribute("fill", "#ffffff");
+        el.setAttribute("fill", "#ffffff"); // reset to white
         el.dataset.oldFill = "#ffffff";
       });
     }
 
+    // Save as PNG
     function savePNG() {
       const svg = svgObject.contentDocument.querySelector("svg");
       if (!svg) return;
