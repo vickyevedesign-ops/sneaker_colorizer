@@ -3,36 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sneaker Colorizer</title>
+  <title>VickyEve ColourIn's</title>
+
+  <!-- Pickr styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css" />
+
   <style>
     body {
       margin: 0;
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      grid-template-rows: auto 1fr;
+      display: flex;
+      flex-direction: column;
       min-height: 100vh;
       background:#0d0f12;
       color:#eaeef3;
       font-family: sans-serif;
     }
     h1 {
-      grid-column: span 2;
       text-align: center;
       margin: 16px 0;
-      font-size: 24px;
+      font-size: 28px;
       color: #fff;
     }
     main {
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 16px;
+      gap: 24px;
     }
     #stage-wrap {
       position: relative;
-      width: min(100%, 1000px);
+      width: min(100%, 800px);
       aspect-ratio: 16 / 9;
-      background:#0f1318;
+      background:#fff; /* White background */
       border:1px solid #222831;
       border-radius:16px;
       padding:24px;
@@ -47,16 +51,16 @@
       height: 90%;
     }
     aside {
-      border-left:1px solid #222831;
-      padding:16px;
       display:flex;
       flex-direction:column;
-      gap:12px;
+      gap:16px;
+      padding:16px;
       background:#0f1318;
+      border-radius:12px;
+      box-shadow:0 6px 20px rgba(0,0,0,.3);
     }
-    .controls button, .controls select {
-      padding: 8px 14px;
-      margin: 6px 0;
+    .controls button {
+      padding: 10px 16px;
       border: none;
       border-radius: 8px;
       background: #222831;
@@ -67,37 +71,101 @@
     .controls button:hover {
       background: #444;
     }
-    #hoverTip {
-      position:absolute;
-      pointer-events:none;
-      z-index:20;
-      background:rgba(0,0,0,.6);
-      color:#fff;
-      padding:4px 8px;
-      border-radius:6px;
-      font-size:12px;
-      opacity:0;
-      transform:translate(-50%,-120%);
-      transition:opacity .15s ease;
-    }
   </style>
 </head>
 <body>
-  <h1>Sneaker Colorizer</h1>
+  <h1>VickyEve ColourIn's</h1>
   <main>
     <div id="stage-wrap">
-      <object id="sneaker-svg" type="image/svg+xml" data="FillableFinal_updated.svg"></object>
+      <object id="sneaker-svg" type="image/svg+xml" data="sneaker1.svg"></object>
     </div>
+    <aside>
+      <div id="color-picker"></div>
+      <div class="controls">
+        <button onclick="resetColors()">Undo</button>
+        <button onclick="savePNG()">Save</button>
+      </div>
+    </aside>
   </main>
-  <aside>
-    <div class="controls">
-      <label for="sneakerSelect">Choose Sneaker:</label>
-      <select id="sneakerSelect">
-        <option value="FillableFinal_updated.svg">Sneaker 1</option>
-        <!-- Add more sneakers here -->
-        <!-- <option value="sneaker2.svg">Sneaker 2</option> -->
-      </select>
 
-      <button onclick="resetColors()">Undo</button>
-      <button onclick="savePNG()">Save</button>
-    </div>
+  <!-- saveSvgAsPng library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/save-svg-as-png/1.4.17/saveSvgAsPng.min.js"></script>
+
+  <!-- Pickr library -->
+  <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
+
+  <script>
+    const svgObject = document.getElementById("sneaker-svg");
+    let currentColor = "#ff0000";
+
+    // Initialize Pickr
+    const pickr = Pickr.create({
+      el: '#color-picker',
+      theme: 'classic', // same as screenshot
+      default: '#ff0000',
+      swatches: [
+        '#F44336', '#E91E63', '#9C27B0', '#673AB7',
+        '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4',
+        '#009688', '#4CAF50', '#8BC34A', '#CDDC39',
+        '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'
+      ],
+      components: {
+        preview: true,
+        opacity: true,
+        hue: true,
+
+        interaction: {
+          hex: true,
+          rgba: true,
+          input: true,
+          save: true
+        }
+      }
+    });
+
+    pickr.on('save', (color) => {
+      currentColor = color.toHEXA().toString();
+      pickr.hide();
+    });
+
+    // Load SVG and attach events
+    svgObject.addEventListener("load", () => {
+      const svgDoc = svgObject.contentDocument;
+      const fillables = svgDoc.querySelectorAll(".fillable");
+
+      fillables.forEach(el => {
+        el.style.cursor = "pointer";
+
+        el.addEventListener("mouseenter", () => {
+          el.dataset.oldFill = el.getAttribute("fill") || "transparent";
+          el.setAttribute("fill", "rgba(255,255,0,0.3)");
+        });
+
+        el.addEventListener("mouseleave", () => {
+          el.setAttribute("fill", el.dataset.oldFill);
+        });
+
+        el.addEventListener("click", () => {
+          el.setAttribute("fill", currentColor);
+        });
+      });
+    });
+
+    // Reset colors
+    function resetColors() {
+      const svgDoc = svgObject.contentDocument;
+      if (!svgDoc) return;
+      svgDoc.querySelectorAll(".fillable").forEach(el => {
+        el.removeAttribute("fill");
+      });
+    }
+
+    // Save as PNG
+    function savePNG() {
+      const svg = svgObject.contentDocument.querySelector("svg");
+      if (!svg) return;
+      saveSvgAsPng(svg, "sneaker.png");
+    }
+  </script>
+</body>
+</html>
