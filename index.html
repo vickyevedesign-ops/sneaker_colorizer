@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>VickyEve ColourIn's</title>
 
+  <!-- Vanilla Colorful (simple color picker) -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/vanilla-colorful@0.6.2/+esm"></script>
+
   <style>
     :root {
       --bg: #F8F8FD;
@@ -13,239 +16,181 @@
 
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto;
       background: var(--bg);
       color: var(--ink);
       display: flex;
       flex-direction: column;
-      align-items: center;
       min-height: 100vh;
     }
 
-    header { text-align: center; margin: 24px 16px; }
-    header img { width: 80px; margin-bottom: 16px; }
-    header p { max-width: 700px; margin: 0 auto; font-size: 18px; line-height: 1.4; }
+    /* Top decorative banner */
+    .top-banner {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      line-height: 0;
+    }
+    .top-banner img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    header img {
+      height: 64px;
+      width: auto;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      margin: 0;
+    }
 
     main {
+      flex: 1;
       display: flex;
-      gap: 24px;
       justify-content: center;
-      align-items: stretch;
-      width: 100%;
-      padding: 24px;
-      box-sizing: border-box;
+      gap: 1rem;
+      padding: 1rem;
     }
 
-    /* Big canvas, no shadow */
+    /* Stage */
     #stage-wrap {
-      background: #fff;
+      background: var(--bg); /* same as page background */
       border-radius: 16px;
-      box-shadow: none;
-      flex: 1 1 820px;            /* give the stage more space */
-      max-width: 1200px;
-      aspect-ratio: 16/9;
+      flex: 1 1 700px;
+      max-width: 1000px;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 8px;
+      padding: 4px;
+      height: auto;
     }
-    #stage-wrap object { width: 98%; height: 98%; }
+    #stage-wrap object {
+      width: 98%;
+      height: auto;
+      max-height: 500px;
+    }
 
-    /* Slim right sidebar; vertically center contents */
-    aside {
-      min-width: 180px;
-      max-width: 200px;
+    /* Controls */
+    #controls {
+      width: 200px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;    /* vertical centering */
-      gap: 14px;
-      background: var(--bg);      /* flush with page background */
-      padding: 8px 0;
+      gap: 1rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
-    /* Picker size */
-    hex-color-picker {
-      width: 170px;
-      height: 170px;
-    }
-
-    /* Hex input + eyedropper row */
-    .tools {
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
+    #controls .picker {
       width: 100%;
-      max-width: 200px;
     }
 
-    .hex-field {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .hex-field label {
-      font-size: 12px;
-      opacity: 0.8;
-      letter-spacing: .02em;
-    }
-
-    #hex-input {
-      width: 110px;
-      text-transform: uppercase;
-      text-align: center;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+    #controls input[type="text"] {
+      width: 100%;
       padding: 6px 8px;
-      font-size: 14px;
-      background: #fff;
-      color: #111;
-      outline: none;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      text-align: center;
+      font-family: monospace;
     }
 
-    #hex-input.invalid {
-      border-color: #E54;
-    }
-
-    .eyedrop-btn {
-      padding: 10px 12px;
+    #controls button {
+      background: var(--ink);
+      color: white;
       border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 14px;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
       cursor: pointer;
-      background: #E1E4FF;
-      color: var(--ink);
-      transition: transform .1s ease, opacity .2s ease;
+      font-size: 0.9rem;
     }
-    .eyedrop-btn:hover { transform: translateY(-2px); opacity: .9; }
-
-    footer { text-align: center; font-size: 14px; margin: 16px 0 24px; }
+    #controls button:hover {
+      opacity: 0.85;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Top decorative banner -->
+  <div class="top-banner">
+    <img src="top-border.png" alt="Decorative border"/>
+  </div>
+
   <header>
     <img src="logo.png" alt="VickyEve Logo"/>
-    <p>
-      Hi, I’m Vicky, a London based Visual Designer with a UX/UI flair. 
-      With more than 14 years of experience, I help brands stand out through 
-      bold, engaging, and purposeful design.
-    </p>
+    <h1>VickyEve Vectors</h1>
   </header>
 
   <main>
+    <!-- Stage -->
     <div id="stage-wrap">
-      <object id="sneaker-svg" type="image/svg+xml" data="sneaker1.svg"></object>
+      <object id="sneaker" data="sneaker1.svg" type="image/svg+xml"></object>
     </div>
 
-    <!-- Slim right panel -->
-    <aside>
-      <hex-color-picker color="#4F46E5"></hex-color-picker>
-
-      <div class="tools">
-        <div class="hex-field">
-          <label for="hex-input">HEX</label>
-          <input id="hex-input" type="text" value="#4F46E5" spellcheck="false" autocomplete="off" inputmode="text" />
-        </div>
-
-        <button class="eyedrop-btn" id="eyedropper-btn">EYEDROPPER</button>
-      </div>
-    </aside>
+    <!-- Controls -->
+    <div id="controls">
+      <hex-color-picker id="color-picker" class="picker"></hex-color-picker>
+      <input type="text" id="hex-input" placeholder="#000000" maxlength="7"/>
+      <button id="eyedropper">🎨 Eyedropper</button>
+    </div>
   </main>
 
-  <footer>
-    Pick a colour or use the eyedropper, then hover/click the illustration to fill sections.
-  </footer>
-
-  <!-- vanilla-colorful web component -->
-  <script type="module" src="https://cdn.skypack.dev/vanilla-colorful"></script>
-
   <script>
-    let currentColor = "#4F46E5";
-    const svgObject = document.getElementById("sneaker-svg");
-    const picker = document.querySelector("hex-color-picker");
+    const picker = document.getElementById("color-picker");
     const hexInput = document.getElementById("hex-input");
-    const eyeBtn = document.getElementById("eyedropper-btn");
+    const eyedropperBtn = document.getElementById("eyedropper");
+    const sneakerObj = document.getElementById("sneaker");
 
-    // --- Helpers ---
-    function normalizeHex(v) {
-      if (!v) return null;
-      v = v.trim().replace(/^#/,'');          // drop leading #
-      if (/^[0-9a-fA-F]{3}$/.test(v)) {
-        // expand short form #RGB -> #RRGGBB
-        v = v.split('').map(ch => ch + ch).join('');
+    // Sync picker -> hex field
+    picker.addEventListener("color-changed", (event) => {
+      hexInput.value = event.detail.value;
+      applyColor(event.detail.value);
+    });
+
+    // Sync hex field -> picker
+    hexInput.addEventListener("input", (e) => {
+      const val = e.target.value;
+      if (/^#([0-9A-Fa-f]{6})$/.test(val)) {
+        picker.color = val;
+        applyColor(val);
       }
-      if (!/^[0-9a-fA-F]{6}$/.test(v)) return null;
-      return '#' + v.toUpperCase();
-    }
-
-    function setColor(hex) {
-      currentColor = hex;
-      picker.color = hex;                      // reflect in picker
-      hexInput.value = hex.toUpperCase();     // reflect in input
-      hexInput.classList.remove('invalid');
-    }
-
-    // --- vanilla-colorful -> app ---
-    picker.addEventListener("color-changed", (e) => {
-      setColor(e.detail.value);
     });
 
-    // --- HEX input -> app ---
-    hexInput.addEventListener("input", () => {
-      const norm = normalizeHex(hexInput.value);
-      if (norm) setColor(norm);
-      else hexInput.classList.add('invalid');
-    });
-    hexInput.addEventListener("blur", () => {
-      const norm = normalizeHex(hexInput.value) || currentColor;
-      setColor(norm);
-    });
-
-    // --- Eyedropper (use the previous working API) ---
-    eyeBtn.addEventListener("click", async () => {
-      if (!("EyeDropper" in window)) {
-        alert("Eyedropper not supported in this browser.");
+    // Eyedropper API
+    eyedropperBtn.addEventListener("click", async () => {
+      if (!window.EyeDropper) {
+        alert("Your browser does not support the Eyedropper API.");
         return;
       }
       try {
         const eye = new EyeDropper();
         const result = await eye.open();
-        setColor(result.sRGBHex);
-      } catch (err) {
-        // user cancelled; no-op
+        picker.color = result.sRGBHex;
+        hexInput.value = result.sRGBHex;
+        applyColor(result.sRGBHex);
+      } catch (e) {
+        console.log("Eyedropper cancelled", e);
       }
     });
 
-    // --- SVG load + painting logic ---
-    svgObject.addEventListener("load", () => {
-      const svgDoc = svgObject.contentDocument;
+    function applyColor(color) {
+      const svgDoc = sneakerObj.contentDocument;
       if (!svgDoc) return;
-      const fillables = svgDoc.querySelectorAll(".fillable");
-
-      fillables.forEach(el => {
-        el.setAttribute("fill", "#FFFFFF");
-        el.dataset.oldFill = "#FFFFFF";
-        el.style.cursor = "pointer";
-
-        el.addEventListener("mouseenter", () => {
-          el.dataset.oldFill = el.getAttribute("fill") || "#FFFFFF";
-          el.setAttribute("fill", "rgba(200,200,200,0.6)");
-        });
-
-        el.addEventListener("mouseleave", () => {
-          el.setAttribute("fill", el.dataset.oldFill);
-        });
-
-        el.addEventListener("click", () => {
-          el.setAttribute("fill", currentColor);
-          el.dataset.oldFill = currentColor;
-        });
-      });
-    });
+      const selected = svgDoc.querySelector(".selected");
+      if (selected) {
+        selected.setAttribute("fill", color);
+      }
+    }
   </script>
 </body>
 </html>
