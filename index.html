@@ -4,29 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Interactive Sneaker Colorizer</title>
-  <!-- Wrap your sneaker SVG and overlay in a container -->
-<div class="sneaker-container" style="position: relative; width: 600px; height: 600px;">
-    
-    <!-- Existing sneaker SVG -->
-    <svg id="sneaker-svg" style="width: 100%; height: 100%;">
-        <!-- your existing sneaker paths here -->
-    </svg>
-
-    <!-- Overlay SVG for shading -->
-    <img src="Asset 1.svg" 
-         alt="shading overlay"
-         style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;  /* important: allows clicks on the sneaker below */
-            mix-blend-mode: multiply; /* optional: blends shading naturally */
-            opacity: 0.5; /* tweak to control shading intensity */
-         ">
-</div>
-
 <style>
   :root {
     --ui-gap: 12px;
