@@ -5,128 +5,193 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>VickyEve ColourIn's</title>
 
-  <!-- Pickr styles -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css" />
+  <!-- Vanilla Colorful color picker -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/vanilla-colorful@0.6.2/hex-color-picker.js"></script>
 
   <style>
     body {
       margin: 0;
+      font-family: sans-serif;
+      background: #F8F8FD; /* brand background */
+      color: #0103A5; /* brand blue for text */
       display: flex;
       flex-direction: column;
+      align-items: center;
       min-height: 100vh;
-      background:#0d0f12;
-      color:#eaeef3;
-      font-family: sans-serif;
     }
-    h1 {
+
+    header {
       text-align: center;
-      margin: 16px 0;
-      font-size: 28px;
-      color: #fff;
+      margin: 24px 16px;
     }
+
+    header img {
+      width: 80px;
+      margin-bottom: 16px;
+    }
+
+    header p {
+      max-width: 700px;
+      margin: 0 auto;
+      font-size: 18px;
+      line-height: 1.4;
+    }
+
     main {
-      flex: 1;
       display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 24px;
+      flex-wrap: wrap;
       gap: 32px;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+      padding: 24px;
+      box-sizing: border-box;
     }
+
     #stage-wrap {
-      position: relative;
-      width: min(100%, 900px);
-      aspect-ratio: 16 / 9;
-      background:#fff; /* White background */
-      border:1px solid #222831;
-      border-radius:16px;
-      padding:24px;
-      box-shadow:0 10px 30px rgba(0,0,0,.35);
-      overflow:hidden;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+      flex: 1 1 600px;
+      max-width: 1000px;
+      aspect-ratio: 16/9;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 24px;
     }
+
     #stage-wrap object {
-      width: 95%;
-      height: 95%;
+      width: 92%;
+      height: 92%;
     }
+
     aside {
-      display:flex;
-      flex-direction:column;
-      gap:20px;
-      padding:20px;
-      background:#0f1318;
-      border-radius:12px;
-      box-shadow:0 6px 20px rgba(0,0,0,.3);
-      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 280px;
+      max-width: 320px;
+      padding: 20px;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 6px 20px rgba(0,0,0,.1);
     }
+
+    hex-color-picker {
+      width: 100%;
+      height: 200px;
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+
+    .swatches button {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
     .controls button {
-      padding: 10px 16px;
+      flex: 1;
+      padding: 12px 16px;
       border: none;
       border-radius: 8px;
-      background: #222831;
-      color: #fff;
+      font-weight: bold;
       cursor: pointer;
       font-size: 14px;
     }
-    .controls button:hover {
-      background: #444;
+
+    .undo-btn {
+      background: #0103A5; /* brand blue */
+      color: #fff;
+    }
+
+    .save-btn {
+      background: #FFCDE6; /* brand pink */
+      color: #0103A5;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 14px;
+      margin: 16px 0 24px;
     }
   </style>
 </head>
 <body>
-  <h1>VickyEve ColourIn's</h1>
+  <header>
+    <img src="logo.png" alt="VickyEve Logo">
+    <p>
+      Hi, I’m Vicky, a London based Visual Designer with a UX/UI flair. 
+      With more than 14 years of experience, I help brands stand out through 
+      bold, engaging, and purposeful design.
+    </p>
+  </header>
+
   <main>
     <div id="stage-wrap">
       <object id="sneaker-svg" type="image/svg+xml" data="sneaker1.svg"></object>
     </div>
     <aside>
-      <div id="color-picker"></div>
+      <hex-color-picker id="color-picker" color="#4F46E5"></hex-color-picker>
+
+      <div class="swatches">
+        <button style="background:#ffffff" data-color="#ffffff"></button>
+        <button style="background:#000000" data-color="#000000"></button>
+        <button style="background:#cccccc" data-color="#cccccc"></button>
+        <button style="background:#0103A5" data-color="#0103A5"></button>
+        <button style="background:#FFCDE6" data-color="#FFCDE6"></button>
+        <button style="background:#F44336" data-color="#F44336"></button>
+        <button style="background:#FF9800" data-color="#FF9800"></button>
+        <button style="background:#FFEB3B" data-color="#FFEB3B"></button>
+        <button style="background:#4CAF50" data-color="#4CAF50"></button>
+        <button style="background:#2196F3" data-color="#2196F3"></button>
+        <button style="background:#9C27B0" data-color="#9C27B0"></button>
+        <button style="background:#795548" data-color="#795548"></button>
+      </div>
+
       <div class="controls">
-        <button onclick="resetColors()">Undo</button>
-        <button onclick="savePNG()">Save</button>
+        <button class="undo-btn" onclick="resetColors()">UNDO</button>
+        <button class="save-btn" onclick="savePNG()">SAVE</button>
       </div>
     </aside>
   </main>
 
+  <footer>
+    Pick a colour and hover over the illustration to fill in sections.
+  </footer>
+
   <!-- saveSvgAsPng library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/save-svg-as-png/1.4.17/saveSvgAsPng.min.js"></script>
 
-  <!-- Pickr library -->
-  <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
-
   <script>
     const svgObject = document.getElementById("sneaker-svg");
-    let currentColor = "#4F46E5"; // default purple
+    const picker = document.getElementById("color-picker");
+    let currentColor = "#4F46E5";
 
-    // Initialize Pickr
-    const pickr = Pickr.create({
-      el: '#color-picker',
-      theme: 'classic', // nice big UI
-      default: '#4F46E5',
-      swatches: [
-        '#F44336', '#E91E63', '#9C27B0', '#673AB7',
-        '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4',
-        '#009688', '#4CAF50', '#8BC34A', '#CDDC39',
-        '#FFEB3B', '#FFC107', '#FF9800', '#FF5722',
-        '#795548', '#9E9E9E', '#607D8B'
-      ],
-      components: {
-        preview: true,
-        opacity: true,
-        hue: true,
-        interaction: {
-          hex: true,
-          rgba: true,
-          input: true,
-          save: true
-        }
-      }
+    // Swatches click
+    document.querySelectorAll(".swatches button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentColor = btn.dataset.color;
+        picker.color = currentColor;
+      });
     });
 
-    pickr.on('save', (color) => {
-      currentColor = color.toHEXA().toString();
-      pickr.hide();
+    // Picker change
+    picker.addEventListener("color-changed", (event) => {
+      currentColor = event.detail.value;
     });
 
     // Load SVG and attach events
@@ -135,12 +200,15 @@
       const fillables = svgDoc.querySelectorAll(".fillable");
       console.log("Found", fillables.length, "fillable paths");
 
+      // Start all fillables as white
       fillables.forEach(el => {
+        el.setAttribute("fill", "#ffffff");
+        el.dataset.oldFill = "#ffffff";
         el.style.cursor = "pointer";
 
         el.addEventListener("mouseenter", () => {
-          el.dataset.oldFill = el.getAttribute("fill") || "transparent";
-          el.setAttribute("fill", "rgba(200,200,200,0.6)"); // light grey hover
+          el.dataset.oldFill = el.getAttribute("fill") || "#ffffff";
+          el.setAttribute("fill", "rgba(200,200,200,0.6)");
         });
 
         el.addEventListener("mouseleave", () => {
@@ -149,7 +217,7 @@
 
         el.addEventListener("click", () => {
           el.setAttribute("fill", currentColor);
-          el.dataset.oldFill = currentColor; // remember chosen color
+          el.dataset.oldFill = currentColor;
         });
       });
     });
@@ -159,8 +227,8 @@
       const svgDoc = svgObject.contentDocument;
       if (!svgDoc) return;
       svgDoc.querySelectorAll(".fillable").forEach(el => {
-        el.removeAttribute("fill");
-        el.dataset.oldFill = "transparent";
+        el.setAttribute("fill", "#ffffff"); // reset to white
+        el.dataset.oldFill = "#ffffff";
       });
     }
 
