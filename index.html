@@ -42,7 +42,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 8px; /* small padding so sneaker is larger */
+      padding: 8px;
     }
     #stage-wrap object { width: 98%; height: 98%; }
 
@@ -109,33 +109,34 @@
     Pick a colour and hover over the illustration to fill in sections.
   </footer>
 
-  <!-- iro.js color picker -->
-  <script src="https://cdn.jsdelivr.net/npm/iro@5"></script>
+  <!-- Load iro.js after DOM exists -->
+  <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
   <!-- saveSvgAsPng -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/save-svg-as-png/1.4.17/saveSvgAsPng.min.js"></script>
 
   <script>
-    const svgObject = document.getElementById("sneaker-svg");
     let currentColor = "#4F46E5"; // default
+    const svgObject = document.getElementById("sneaker-svg");
 
-    // Initialize iro.js picker
-    const iroPicker = new iro.ColorPicker("#picker", {
-      width: 240,
-      color: currentColor,
-      borderWidth: 1,
-      borderColor: "#ccc",
+    // init iro.js AFTER window load
+    window.addEventListener("DOMContentLoaded", () => {
+      const iroPicker = new iro.ColorPicker("#picker", {
+        width: 240,
+        color: currentColor,
+        borderWidth: 1,
+        borderColor: "#ccc",
+      });
+
+      // update color
+      iroPicker.on("color:change", (color) => {
+        currentColor = color.hexString;
+      });
     });
 
-    // Update currentColor when picker changes
-    iroPicker.on("color:change", (color) => {
-      currentColor = color.hexString;
-    });
-
-    // When SVG loads
+    // when sneaker svg loads
     svgObject.addEventListener("load", () => {
       const svgDoc = svgObject.contentDocument;
       const fillables = svgDoc.querySelectorAll(".fillable");
-      console.log("Found", fillables.length, "fillable sections");
 
       fillables.forEach(el => {
         el.setAttribute("fill", "#ffffff"); // start white
@@ -158,17 +159,17 @@
       });
     });
 
-    // Reset colors
+    // reset
     function resetColors() {
       const svgDoc = svgObject.contentDocument;
       if (!svgDoc) return;
       svgDoc.querySelectorAll(".fillable").forEach(el => {
-        el.setAttribute("fill", "#ffffff"); // reset to white
+        el.setAttribute("fill", "#ffffff");
         el.dataset.oldFill = "#ffffff";
       });
     }
 
-    // Save as PNG
+    // save
     function savePNG() {
       const svg = svgObject.contentDocument.querySelector("svg");
       if (!svg) return;
