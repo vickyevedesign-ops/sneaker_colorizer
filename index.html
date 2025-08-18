@@ -104,6 +104,23 @@
   width: 100%;
   height: 100%;
 }
+
+#sneaker-overlay {
+  pointer-events: none;
+}
+#sneaker-overlay svg {
+  pointer-events: none;
+}
+#sneaker-base svg path {
+  pointer-events: fill;
+  cursor: pointer;
+}
+
+#sneaker-base svg path:hover {
+  stroke: #00ffff;
+  stroke-width: 2;
+  stroke-opacity: 0.8;
+}
 </style>
 </head>
 <body>
