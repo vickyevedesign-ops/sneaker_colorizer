@@ -23,10 +23,8 @@
 
     main {
       display: flex;
-      flex-wrap: wrap;
-      gap: 32px;
-      justify-content: center;
-      align-items: flex-start;
+      flex-direction: column;
+      align-items: center;
       width: 100%;
       padding: 24px;
       box-sizing: border-box;
@@ -37,7 +35,7 @@
       background: #fff;
       border-radius: 16px;
       box-shadow: none; /* removed shadow */
-      flex: 1 1 600px;
+      width: 100%;
       max-width: 1000px;
       aspect-ratio: 16/9;
       display: flex;
@@ -47,83 +45,67 @@
     }
     #stage-wrap object { width: 98%; height: 98%; }
 
-    /* --- Aside panel --- */
-    aside {
+    /* --- Controls panel below SVG --- */
+    #controls-panel {
+      margin-top: 20px;
+      padding: 10px 0;
+      background: #F8F8FD; /* same as page bg */
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      min-width: 280px;
-      max-width: 320px;
-      padding: 20px;
-      border-radius: 16px;
-      background: #fff;
-      border: 1px solid #e4e4f0; /* subtle border instead of heavy shadow */
-    }
-
-    /* --- Color preview --- */
-    #color-preview {
-      display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 16px;
+      width: 100%;
+      max-width: 1000px;
+      box-sizing: border-box;
     }
 
-    #color-preview .swatch {
+    #picker {
+      background: #F8F8FD; /* flush with page */
+      border: none;
+    }
+
+    /* --- Horizontal toolbar --- */
+    #picker-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    #picker-row .swatch {
       width: 32px;
       height: 32px;
       border-radius: 8px;
       border: 1px solid #ccc;
     }
 
-    #color-input {
-      flex: 1;
-      border: 1px solid #ccc;
-      padding: 6px;
-      border-radius: 6px;
-      font-size: 14px;
+    #picker-row input {
+      width: 80px;
       text-align: center;
-    }
-
-    #eyedropper-btn {
-      background: #eee;
-      border: none;
-      padding: 8px 12px;
+      border: 1px solid #ccc;
       border-radius: 6px;
-      cursor: pointer;
+      padding: 4px;
       font-size: 14px;
     }
 
-    /* --- Controls (buttons) --- */
-    .controls {
-      display: flex;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .controls button {
-      flex: 1;
-      padding: 12px 16px;
+    #picker-row button {
+      padding: 8px 12px;
       border: none;
-      border-radius: 12px;
+      border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 15px;
+      font-size: 14px;
       transition: transform 0.1s ease, opacity 0.2s ease;
     }
 
-    .controls button:hover {
+    #picker-row button:hover {
       transform: translateY(-2px);
       opacity: 0.9;
     }
 
-    .undo-btn {
-      background: #0103A5;
-      color: #fff;
-    }
-
-    .save-btn {
-      background: #FFCDE6;
-      color: #0103A5;
-    }
+    .undo-btn { background: #0103A5; color: #fff; }
+    .save-btn { background: #FFCDE6; color: #0103A5; }
 
     footer { text-align: center; font-size: 14px; margin: 16px 0 24px; }
   </style>
@@ -142,20 +124,19 @@
     <div id="stage-wrap">
       <object id="sneaker-svg" type="image/svg+xml" data="sneaker1.svg"></object>
     </div>
-    <aside>
-      <!-- Sleeker Color Picker container -->
+
+    <!-- Controls below the sneaker -->
+    <div id="controls-panel">
       <div id="picker"></div>
-      <div id="color-preview">
+
+      <div id="picker-row">
         <div class="swatch"></div>
         <input type="text" id="color-input" readonly />
-        <button id="eyedropper-btn">🎨 Eyedrop</button>
-      </div>
-
-      <div class="controls">
+        <button id="eyedropper-btn">🎨</button>
         <button class="undo-btn" onclick="resetColors()">UNDO</button>
         <button class="save-btn" onclick="savePNG()">SAVE</button>
       </div>
-    </aside>
+    </div>
   </main>
 
   <footer>
@@ -174,7 +155,7 @@
     // init iro.js AFTER window load
     window.addEventListener("DOMContentLoaded", () => {
       const iroPicker = new iro.ColorPicker("#picker", {
-        width: 220,
+        width: 240,
         color: currentColor,
         layout: [
           { component: iro.ui.Box },
@@ -183,7 +164,7 @@
         ]
       });
 
-      const swatch = document.querySelector("#color-preview .swatch");
+      const swatch = document.querySelector("#picker-row .swatch");
       const input = document.getElementById("color-input");
       const eyedropBtn = document.getElementById("eyedropper-btn");
 
